@@ -1,0 +1,6 @@
+ex00/rush-01
+ex00/*.o
+tests/gen_puzzle
+tests/verify
+tests/debug_runner
+*.dSYM/
