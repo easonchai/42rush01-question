@@ -9,11 +9,13 @@
 
 set -u
 cd "$(dirname "$0")/.."
-RUSH=./ex00/rush-01
+RUSH=${RUSH_BIN:-./ex00/rush-01}
 GEN=./tests/gen_puzzle
 VER=./tests/verify
 TMP=$(mktemp -d)
 trap "rm -rf $TMP" EXIT
+
+echo "Using solver: $RUSH"
 
 if [ ! -x "$RUSH" ]; then (cd ex00 && cc -Wall -Wextra -Werror -o rush-01 *.c) || exit 1; fi
 if [ ! -x "$GEN" ]; then cc -O2 -o tests/gen_puzzle tests/gen_puzzle.c || exit 1; fi

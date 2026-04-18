@@ -8,7 +8,7 @@
 
 set -u
 cd "$(dirname "$0")/.."
-RUSH=./ex00/rush-01
+RUSH=${RUSH_BIN:-./ex00/rush-01}
 GEN=./tests/gen_puzzle
 VER=./tests/verify
 TMP=$(mktemp -d)
@@ -16,6 +16,8 @@ trap "rm -rf $TMP" EXIT
 
 pass=0
 fail=0
+
+echo "Using solver: $RUSH"
 
 # ---- Build if missing ----
 if [ ! -x "$RUSH" ]; then
