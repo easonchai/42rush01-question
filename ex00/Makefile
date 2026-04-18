@@ -1,7 +1,12 @@
 NAME = rush-01
 CC = cc
 CFLAGS = -Wall -Wextra -Werror
-SRCS = main.c parse.c precheck.c visibility.c permgen.c domain.c state.c propagate.c search.c output.c
+SRCS = main.c parse.c parse_utils.c precheck.c visibility.c \
+       permgen.c permgen_utils.c domain.c bitset.c \
+       state.c state_free.c \
+       propagate.c propagate_posval.c propagate_kill.c \
+       search.c search_mrv.c search_snap.c search_restore.c \
+       output.c
 OBJS = $(SRCS:.c=.o)
 
 all: $(NAME)

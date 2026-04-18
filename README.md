@@ -67,36 +67,49 @@ N=9 — this is a ~6000× median speedup.)
 
 ## File layout
 
+Files are split across 20 translation units to satisfy Norminette's
+5-functions-per-file and 25-lines-per-function limits while keeping each
+module's responsibility focused.
+
 ```
 ex00/
-  rush01.h       types, constants, prototypes
-  main.c         argv dispatch
-  parse.c        single-argv tokenization + range checks
-  precheck.c     opposite-clue pair validity (a+b <= n+1)
-  visibility.c   count_visible_{left,right} over packed permutations
-  permgen.c      bucket-classify all N! perms into a flat arena
-  state.c        state init/free; line alive-bitmap allocation
-  domain.c       bitmask helpers (popcount, ctz)
-  propagate.c    recompute pos_val, intersect cells, kill dead perms,
-                 fixed-point loop — word-based iteration with log-time ctz
-  search.c       MRV on lines, snapshot-based backtracking
-  output.c       format grid → single write(1, buf, len); emit "Error\n"
+  rush01.h              types (t_u*, t_line, t_state, t_snap), constants, prototypes
+  main.c                argv dispatch, top-level orchestration
+  parse.c               tokenize, read_int, validate range
+  parse_utils.c         count_tokens, infer_n
+  precheck.c            opposite-clue pair validity (a+b <= n+1)
+  visibility.c          count_visible_{left,right} over packed perms
+  permgen.c             bucket-classify all N! perms into a flat arena
+  permgen_utils.c       factorial, compute_offsets, bind_lines
+  domain.c              popcount16, ctz16, ctzll (log-time)
+  bitset.c              bitset get/set/clear, sizing
+  state.c               init: clue install, cell domain init, line generation
+  state_free.c          line alive-bitmap alloc + state teardown
+  propagate.c           fixed-point loop, cell intersection
+  propagate_posval.c    recompute pos_val from alive perms (word iteration)
+  propagate_kill.c      kill perms whose value at a given pos is now forbidden
+  search.c              solve() entry, try_candidate, recursive search_line
+  search_mrv.c          is_solved, pick_mrv_line (minimum remaining values)
+  search_snap.c         snapshot state for backtracking
+  search_restore.c      restore state on failed branch
+  output.c              format grid → single write; emit "Error\n"
   Makefile
 
 tests/
-  gen_puzzle.c   generate random Latin square (cyclic + row/col shuffle),
-                 emit 4N clues
-  verify.c       validate solver output: Latin square + clue-match
-  run_tests.sh   PDF case + error paths + N=3..9 × 20 seeds each (152 checks)
-  bench.sh       multi-run correctness + timing stats (min/med/mean/max)
-  debug_main.c   optional debug harness that dumps intermediate state
-  debug_dump.c   helper for the above
+  gen_puzzle.c          generate random Latin square, emit 4N clues
+  verify.c              validate solver output: Latin square + clue match
+  run_tests.sh          PDF case + error paths + N=3..9 × 20 seeds (152 checks)
+  bench.sh              multi-run correctness + timing stats
+  add_header.py         helper to insert 42 headers into source files
+  debug_main.c          optional debug harness that dumps intermediate state
+  debug_dump.c          helper for the above
 ```
 
 ## Constraints honored
 
 - Only `write`, `malloc`, `free` — no other libc function calls in `ex00/`.
 - Compiles clean with `cc -Wall -Wextra -Werror`.
+- Passes `norminette` with zero errors across all 20 files.
 - Binary is named `rush-01` per subject.
 - Input is a single quoted argv string; any malformation → `Error\n`.
 - No parallelization in this version.

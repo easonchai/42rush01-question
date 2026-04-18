@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   domain.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: claude <claude@student.42.fr>              +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/18 00:00:00 by claude          #+#    #+#              */
+/*   Updated: 2026/04/18 00:00:00 by claude         ###   ########.fr        */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "rush01.h"
 
 int	popcount16(t_u16 x)
@@ -28,22 +40,49 @@ int	ctz16(t_u16 x)
 	return (c);
 }
 
-int	bitset_bytes(int nbits)
+static int	ctz_low8(t_u32 x)
 {
-	return (((nbits + 63) / 64) * 8);
+	int	n;
+
+	n = 0;
+	if ((x & 0xF) == 0)
+	{
+		n += 4;
+		x >>= 4;
+	}
+	if ((x & 0x3) == 0)
+	{
+		n += 2;
+		x >>= 2;
+	}
+	if ((x & 0x1) == 0)
+		n += 1;
+	return (n);
 }
 
-int	bitset_test(const t_u64 *bs, int i)
+static int	ctz_low32(t_u32 x)
 {
-	return ((int)((bs[i >> 6] >> (i & 63)) & 1ULL));
+	int	n;
+
+	n = 0;
+	if ((x & 0xFFFF) == 0)
+	{
+		n += 16;
+		x >>= 16;
+	}
+	if ((x & 0xFF) == 0)
+	{
+		n += 8;
+		x >>= 8;
+	}
+	return (n + ctz_low8(x));
 }
 
-void	bitset_set(t_u64 *bs, int i)
+int	ctzll(t_u64 x)
 {
-	bs[i >> 6] |= (1ULL << (i & 63));
-}
-
-void	bitset_clear(t_u64 *bs, int i)
-{
-	bs[i >> 6] &= ~(1ULL << (i & 63));
+	if (x == 0)
+		return (64);
+	if ((x & 0xFFFFFFFFULL) == 0)
+		return (32 + ctz_low32((t_u32)(x >> 32)));
+	return (ctz_low32((t_u32)x));
 }
