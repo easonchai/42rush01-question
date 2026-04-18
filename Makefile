@@ -3,13 +3,14 @@
 #   make norm    build ex00/rush-01  (norminette-compliant, -Wall -Wextra -Werror)
 #   make fast    build bonus/rush-01 (-O3 -march=native, pthread-parallel gen)
 #   make all     build both
-#   make test    run full test suite against ex00/rush-01
+#   make test    run internal test suite against ex00/rush-01
 #   make test-fast   same, against bonus/rush-01
 #   make bench   benchmark both versions side-by-side
+#   make test-external   run the hochan222/rush01-tester external suite
 #   make clean   remove object files from both
 #   make fclean  remove objects and binaries from both
 
-.PHONY: all norm fast test test-fast bench clean fclean re
+.PHONY: all norm fast test test-fast bench test-external clean fclean re
 
 all: norm fast
 
@@ -31,6 +32,13 @@ bench: norm fast
 	@echo ""
 	@echo "=== Benchmarking bonus (-O3 + pthread parallel gen) ==="
 	RUNS=3 PUZZLES=30 RUSH_BIN=./bonus/rush-01 bash tests/bench.sh
+
+test-external: norm
+	@if [ ! -d rush01-tester ]; then \
+		git clone --depth 1 https://github.com/hochan222/rush01-tester.git; \
+	fi
+	cp ex00/rush-01 rush01-tester/rush01
+	cd rush01-tester && echo "" | bash test.sh | tail -5
 
 clean:
 	$(MAKE) -C ex00 clean
