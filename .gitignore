@@ -7,3 +7,4 @@ tests/verify
 tests/debug_runner
 rush01-tester/
 *.dSYM/
+viz/__pycache__/

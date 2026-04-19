@@ -7,10 +7,14 @@
 #   make test-fast   same, against bonus/rush-01
 #   make bench   benchmark both versions side-by-side
 #   make test-external   run the hochan222/rush01-tester external suite
+#   make viz    launch the 3D terminal visualizer on the PDF N=4 example
+#               (override with: make viz CLUES="...")
 #   make clean   remove object files from both
 #   make fclean  remove objects and binaries from both
 
-.PHONY: all norm fast test test-fast bench test-external clean fclean re
+.PHONY: all norm fast test test-fast bench test-external viz clean fclean re
+
+CLUES ?= 4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2
 
 all: norm fast
 
@@ -39,6 +43,12 @@ test-external: norm
 	fi
 	cp ex00/rush-01 rush01-tester/rush01
 	cd rush01-tester && echo "" | bash test.sh | tail -5
+
+viz:
+	python3 viz/skyscraper_viz.py "$(CLUES)"
+
+viz-test:
+	python3 viz/skyscraper_viz.py --test "$(CLUES)"
 
 clean:
 	$(MAKE) -C ex00 clean
