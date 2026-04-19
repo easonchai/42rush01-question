@@ -2,6 +2,17 @@
 
 Solver for the 42 Rush-01 Skyscraper (Towers) puzzle, supporting N = 3..9.
 
+## What's in this repo
+
+| Piece | Directory | What it is |
+|---|---|---|
+| Norminette-clean solver | `ex00/` | The 42 submission. C, `write`/`malloc`/`free` only, `-Wall -Wextra -Werror`, 20 files, norminette passes. |
+| Fast solver | `bonus/` | Same algorithm, compiled with `-O3 -march=native -pthread`, compiler intrinsics, parallel bucket generation. 6× faster on N=9. |
+| Test harness | `tests/` | `gen_puzzle.c` (random Latin squares → clues), `verify.c` (Latin-square + clue check), `run_tests.sh`, `bench.sh`. |
+| Live 3D visualizer | `viz/` | Python 3 CLI visualizer of the algorithm running, with rotatable isometric view. Pure stdout ANSI (works on Warp, iTerm2, Alacritty, kitty, any truecolor terminal). |
+| Animated video | `video/` | Remotion (React + TS) explainer, 73 s @ 1280×720, output in `video/out/skyscraper.mp4`. |
+| External tester hook | `make test-external` | Pulls in [hochan222/rush01-tester](https://github.com/hochan222/rush01-tester) and runs it against our binary. 77/77 pass. |
+
 ## Algorithm
 
 Wave-function-collapse at the **line level** with two-sided constraint
@@ -128,11 +139,71 @@ tests/
   debug_dump.c          helper for the above
 ```
 
-## Constraints honored
+## Live visualizer
 
-- Only `write`, `malloc`, `free` — no other libc function calls in `ex00/`.
+Watch the algorithm collapse a puzzle in real time, in your terminal, with a
+rotatable 3-D view of the towers:
+
+```
+make viz                                    # PDF N=4 example
+make viz CLUES="<your 4N clue string>"      # any N=3..9 puzzle
+```
+
+Controls: `space` = step, `enter` = autoplay, arrows = rotate, `+/-` = zoom,
+`r` = reset, `q` = quit. Full details in `viz/README.md`. Written as a single
+Python 3 script, stdlib only, pure stdout ANSI (no curses — so it renders
+correctly on Warp, iTerm2, Alacritty, kitty, and any truecolor terminal).
+
+## Animated explainer video
+
+73-second Remotion video walking through brute force → CSP → line-level WFC →
+code → performance:
+
+```
+cd video
+npm install
+npm run render                              # -> video/out/skyscraper.mp4
+npm run dev                                 # Remotion Studio (live preview)
+```
+
+A prerendered MP4 is committed at `video/out/skyscraper.mp4`. Scene breakdown
+and source layout in `video/README.md`.
+
+## External tester
+
+[hochan222/rush01-tester](https://github.com/hochan222/rush01-tester) is a
+community test suite with 77 cases covering parsing edge cases, general N=4
+puzzles, blank-input and format-error variants, and one deterministic puzzle
+each for N=5..9.
+
+```
+make test-external       # clones the tester into rush01-tester/ if missing,
+                         # copies ex00/rush-01 as ./rush01, runs bash test.sh
+```
+
+Both `ex00` and `bonus` builds pass 77/77.
+
+## Constraints honored (by ex00)
+
+- Only `write`, `malloc`, `free` — no other libc function calls.
 - Compiles clean with `cc -Wall -Wextra -Werror`.
 - Passes `norminette` with zero errors across all 20 files.
 - Binary is named `rush-01` per subject.
 - Input is a single quoted argv string; any malformation → `Error\n`.
-- No parallelization in this version.
+- No parallelization in this variant (the parallel version lives in `bonus/`).
+
+## Why this algorithm beats brute force (one-paragraph summary)
+
+Brute force walks cells in reading order trying values 1..N, checking the
+visibility clues only after a line is full — billions of doomed partial
+assignments per N=9 puzzle. Cell-level CSP (AC-3) propagates row/column
+uniqueness tightly but can't express visibility, which is a whole-line
+sequence constraint. Our line-level wave-function-collapse treats each row
+and each column as a single variable whose domain is the set of
+N-permutations matching that line's two edge clues. Intersecting row and
+column projections at each cell, then killing the permutations that can't
+produce the surviving values, propagates information across the whole grid
+in one shot. The Stirling-number counts say these per-line domains stay
+under ~14 000 perms for N=9, so the whole thing fits in a couple MB and
+usually solves without any backtracking. That's how we go from 20 minutes
+to ~40 milliseconds.
