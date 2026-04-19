@@ -588,16 +588,122 @@ def hud_lines(state, az, el, scale, auto_play, steps_total):
 # Interactive curses UI
 # ---------------------------------------------------------------------------
 
-def run_interactive(state):
-    import curses
+def _read_key(timeout=0.0):
+    """Read one keystroke (or a recognized escape sequence) from stdin.
+    Returns one of: None, "left", "right", "up", "down", "enter",
+    "space", "esc", a single character, or "ctrl-c"."""
+    import select
+    import sys
+    r, _, _ = select.select([sys.stdin], [], [], timeout)
+    if not r:
+        return None
+    ch = sys.stdin.read(1)
+    if ch == "":
+        return None
+    if ch == "\x03":
+        return "ctrl-c"
+    if ch == "\x1b":
+        # Could be ESC alone, or an arrow-key sequence \x1b[<X>
+        r2, _, _ = select.select([sys.stdin], [], [], 0.01)
+        if not r2:
+            return "esc"
+        seq = sys.stdin.read(1)
+        if seq == "[":
+            r3, _, _ = select.select([sys.stdin], [], [], 0.01)
+            if r3:
+                code = sys.stdin.read(1)
+                return {
+                    "A": "up",
+                    "B": "down",
+                    "C": "right",
+                    "D": "left",
+                }.get(code, None)
+        return "esc"
+    if ch == "\r" or ch == "\n":
+        return "enter"
+    if ch == " ":
+        return "space"
+    return ch
 
-    def main(stdscr):
-        curses.curs_set(0)
-        stdscr.nodelay(True)
+
+def _terminal_size():
+    import shutil
+    sz = shutil.get_terminal_size((80, 24))
+    return (sz.columns, sz.lines)
+
+
+def _render_frame(state, az, el, scale, auto, highlight):
+    """Return the full frame (ANSI-encoded) as a single string, sized to
+    the current terminal."""
+    cols, rows = _terminal_size()
+    if cols < 60 or rows < 20:
+        return ("\x1b[H\x1b[2J"
+                f"Terminal too small ({cols}x{rows}); need >= 60x20.\n")
+    view_w = cols
+    view_rows = rows - 9
+    if view_rows < 5:
+        view_rows = 5
+    pix = render_scene(state, az, el, scale, view_w, view_rows, highlight)
+    buf = ["\x1b[H"]           # cursor home
+    # frame body
+    for row_idx, s in pix.to_ansi_lines():
+        buf.append(s)
+        buf.append("\x1b[K")   # clear to end of line
+        buf.append("\n")
+    title, controls, camera, clues, bars = hud_lines(
+        state, az, el, scale, auto, state.step)
+    hud = [title, controls, camera, "", *clues.split("\n")]
+    # pad to total
+    total_hud_rows = rows - view_rows
+    for i in range(total_hud_rows):
+        line = hud[i] if i < len(hud) else ""
+        buf.append("\x1b[0m" + line[:cols])
+        buf.append("\x1b[K")
+        if i < total_hud_rows - 1:
+            buf.append("\n")
+    buf.append("\x1b[0m")
+    return "".join(buf)
+
+
+def run_interactive(state):
+    """Direct-stdout ANSI renderer + termios raw-mode input. Works on any
+    VT100/truecolor terminal (Warp, iTerm2, Alacritty, kitty, xterm, etc.)
+    without going through curses (which does not pass ANSI escapes through)."""
+    import sys
+    import termios
+    import tty
+    import signal
+
+    if not sys.stdout.isatty():
+        sys.stderr.write("not a tty; use --test for non-interactive render\n")
+        sys.exit(2)
+
+    fd = sys.stdin.fileno()
+    old_attrs = termios.tcgetattr(fd)
+
+    def restore():
+        sys.stdout.write("\x1b[?25h")      # show cursor
+        sys.stdout.write("\x1b[?1049l")    # leave alt screen
+        sys.stdout.flush()
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_attrs)
+
+    def on_sig(signum, _frame):
+        restore()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, on_sig)
+    signal.signal(signal.SIGTERM, on_sig)
+
+    try:
+        tty.setcbreak(fd)
+        sys.stdout.write("\x1b[?1049h")    # alt screen
+        sys.stdout.write("\x1b[?25l")      # hide cursor
+        sys.stdout.write("\x1b[2J")        # clear
+        sys.stdout.flush()
+
         az = math.radians(35)
         el = math.radians(30)
-        scale_base = 3.0
-        scale = scale_base
+        scale = 3.0
         auto = False
         gen = solve_steps(state)
         last_step_time = 0.0
@@ -605,102 +711,69 @@ def run_interactive(state):
         highlight = None
         highlight_until = 0.0
         finished = False
+        frame_interval = 1.0 / 30.0
+        last_frame = 0.0
 
         while True:
-            t = time.time()
-            # input
-            try:
-                key = stdscr.getch()
-            except Exception:
-                key = -1
-            if key == ord("q") or key == 27:
-                return
-            if key == curses.KEY_LEFT:
+            now = time.time()
+
+            key = _read_key(timeout=0.01)
+            if key in ("q", "esc", "ctrl-c"):
+                break
+            elif key == "left":
                 az -= math.radians(15)
-            elif key == curses.KEY_RIGHT:
+            elif key == "right":
                 az += math.radians(15)
-            elif key == curses.KEY_UP:
+            elif key == "up":
                 el = min(math.radians(85), el + math.radians(10))
-            elif key == curses.KEY_DOWN:
+            elif key == "down":
                 el = max(math.radians(-20), el - math.radians(10))
-            elif key in (ord("+"), ord("=")):
+            elif key in ("+", "="):
                 scale = min(20.0, scale * 1.2)
-            elif key in (ord("-"), ord("_")):
+            elif key in ("-", "_"):
                 scale = max(0.8, scale / 1.2)
-            elif key in (ord(" "), ord("k")):
+            elif key == "space" or key == "k":
                 if not finished:
                     try:
                         ev = next(gen)
                         if ev[0] == "cell":
                             highlight = (ev[1], ev[2])
-                            highlight_until = t + 0.3
+                            highlight_until = now + 0.3
                     except StopIteration:
                         finished = True
-            elif key in (10, 13, ord("p")):
+            elif key == "enter" or key == "p":
                 auto = not auto
-            elif key == ord("r"):
+            elif key == "r":
                 state_new = State(state.n, state.clues)
                 state.__dict__.update(state_new.__dict__)
                 gen = solve_steps(state)
                 finished = False
                 highlight = None
 
-            if auto and not finished and t - last_step_time >= auto_delay:
-                last_step_time = t
+            if auto and not finished and now - last_step_time >= auto_delay:
+                last_step_time = now
                 try:
                     ev = next(gen)
                     if ev[0] == "cell":
                         highlight = (ev[1], ev[2])
-                        highlight_until = t + 0.15
-                    if ev[0] in ("contradiction", "phase") and ev[-1] in (
-                            "solved", "need_search", "contradiction"):
+                        highlight_until = now + 0.15
+                    if ev[0] == "phase" and ev[1] in (
+                            "solved", "contradiction", "no_solution"):
                         auto = False
                 except StopIteration:
                     finished = True
                     auto = False
 
-            if highlight and t > highlight_until:
+            if highlight and now > highlight_until:
                 highlight = None
 
-            rows, cols = stdscr.getmaxyx()
-            if cols < 60 or rows < 20:
-                stdscr.clear()
-                stdscr.addstr(0, 0, "Terminal too small (need >= 60x20).")
-                stdscr.refresh()
-                time.sleep(0.1)
-                continue
-
-            # viewport
-            view_w = cols
-            view_rows = rows - 9        # room for HUD
-            if view_rows < 5:
-                view_rows = 5
-            pix = render_scene(state, az, el, scale,
-                               view_w, view_rows, highlight)
-            # draw
-            stdscr.erase()
-            for row_idx, s in pix.to_ansi_lines():
-                try:
-                    stdscr.addstr(row_idx, 0, s)
-                except curses.error:
-                    pass
-
-            title, controls, camera, clues, bars = hud_lines(
-                state, az, el, scale, auto, state.step)
-            hud_y = view_rows
-            try:
-                stdscr.addstr(hud_y, 0, title[:cols])
-                stdscr.addstr(hud_y + 1, 0, controls[:cols])
-                stdscr.addstr(hud_y + 2, 0, camera[:cols])
-                for i, line in enumerate(clues.split("\n")):
-                    stdscr.addstr(hud_y + 4 + i, 0, line[:cols])
-            except curses.error:
-                pass
-
-            stdscr.refresh()
-            time.sleep(0.02)
-
-    curses.wrapper(main)
+            if now - last_frame >= frame_interval:
+                last_frame = now
+                frame = _render_frame(state, az, el, scale, auto, highlight)
+                sys.stdout.write(frame)
+                sys.stdout.flush()
+    finally:
+        restore()
 
 
 # ---------------------------------------------------------------------------
