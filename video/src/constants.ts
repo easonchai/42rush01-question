@@ -2,16 +2,17 @@ export const FPS = 30;
 export const WIDTH = 1280;
 export const HEIGHT = 720;
 
-// Scene durations in seconds
+// Scene durations in seconds — extended on text-heavy scenes so viewers
+// have real time to read before the next one cuts in.
 export const SCENES = {
-  intro: 5,
-  problem: 9,
-  bruteforce: 10,
-  csp: 11,
-  wfc: 14,
-  code: 10,
-  perf: 8,
-  outro: 6,
+  intro: 6,
+  problem: 13,
+  bruteforce: 13,
+  csp: 16,
+  wfc: 20,
+  code: 14,
+  perf: 12,
+  outro: 8,
 };
 
 export const SCENE_FRAMES = {

@@ -30,7 +30,7 @@ export const SceneIntro: React.FC = () => {
       <div style={{marginBottom: 40}}>
         <Title
           text="The Skyscraper Puzzle"
-          subtitle="From 20 minutes to 40 milliseconds — a 6000× speedup"
+          subtitle="how a small change in perspective beats 20 minutes of brute force"
           color={COLORS.fg}
         />
       </div>
