@@ -32,38 +32,61 @@ Key facts (from Khovanova's skyscraper-numbers result) that make this tractable:
 - `f_N(a,b) = 0` iff `a + b > N + 1`.
 - For N=9 the largest bucket is under 14,000 perms; typical lines far smaller.
 
-## Build and run
+## Two build variants
+
+| Variant | Directory | Compiler flags | Libraries | Norminette | Intended for |
+|---|---|---|---|---|---|
+| **norm** | `ex00/` | `-Wall -Wextra -Werror` | `write`, `malloc`, `free` only | ✅ clean | 42 submission |
+| **fast** | `bonus/` | `-O3 -march=native -pthread` | + `pthread`, `string.h`, compiler intrinsics | n/a | raw performance |
+
+Both solve the exact same puzzles with the same algorithm; the `bonus/` version
+adds compiler intrinsics (`__builtin_popcount`, `__builtin_ctzll` → single
+CPU instructions) and parallelizes the N! bucket-generation phase across
+one thread per starting value using pthreads.
+
+### Build and run
 
 ```
-cd ex00
-make                                            # or: cc -Wall -Wextra -Werror -o rush-01 *.c
-./rush-01 "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
+make norm              # builds ex00/rush-01 (42-submission)
+make fast              # builds bonus/rush-01 (optimized)
+make all               # both
+
+./ex00/rush-01  "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
+./bonus/rush-01 "4 3 2 1 1 2 2 2 4 3 2 1 1 2 2 2"
 ```
 
 Clue order: `c1_up .. cN_up c1_down .. cN_down r1_left .. rN_left r1_right .. rN_right`.
 Error input → prints `Error\n`.
 
-## Tests
+### Tests
 
 ```
-bash tests/run_tests.sh      # 152 cases: PDF, error paths, N=3..9 random
-bash tests/bench.sh          # multi-run correctness + timing (RUNS, PUZZLES env vars)
+make test              # run 152-case suite against ex00
+make test-fast         # same suite against bonus
+make bench             # side-by-side benchmark of both
+RUNS=5 PUZZLES=50 RUSH_BIN=./bonus/rush-01 bash tests/bench.sh   # ad-hoc
 ```
 
-### Current performance (3 runs × 50 puzzles per N)
+### Measured performance (3 runs × 30 random puzzles per N)
 
 ```
-N=3  median=  9.0ms   mean=  9.2ms   max= 29.9ms
-N=4  median=  9.2ms   mean=  9.4ms   max= 29.9ms
-N=5  median=  8.9ms   mean=  9.1ms   max= 30.0ms
-N=6  median=  9.2ms   mean=  9.3ms   max= 11.7ms
-N=7  median= 11.9ms   mean= 12.1ms   max= 32.7ms
-N=8  median= 30.0ms   mean= 39.5ms   max=755.5ms
-N=9  median=208.5ms   mean=274.6ms   max= 5.2s
+                ex00 (norminette)           bonus (-O3 + pthreads)
+N   median       mean       max          median       mean        max
+3   11.8ms      11.9ms     19.2ms         13.3ms     13.3ms      16.7ms
+4   12.0ms      12.0ms     17.2ms         13.7ms     14.0ms      18.0ms
+5   12.1ms      12.5ms     16.4ms         15.0ms     15.5ms      35.5ms
+6   12.2ms      12.6ms     32.2ms         15.3ms     15.5ms      18.5ms
+7   14.9ms      15.1ms     22.0ms         16.0ms     16.6ms      39.1ms
+8   37.0ms      39.9ms     88.3ms         19.5ms     19.9ms      27.7ms
+9  252.8ms     292.4ms   2086.3ms         41.5ms     49.0ms     389.7ms
 ```
 
-(For reference: naive cell-level backtracking typically takes ~20 minutes on
-N=9 — this is a ~6000× median speedup.)
+For small N, thread-creation overhead outweighs the parallel gain. For N=8
+and N=9 the bonus version is 2-6× faster. The ex00 version remains the
+reference for 42 submission and compiles cleanly under norminette.
+
+(For reference: naive cell-level backtracking takes ~20 minutes on N=9.
+Both our versions are ~3000-30000× faster.)
 
 ## File layout
 
