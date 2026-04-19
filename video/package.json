@@ -1,0 +1,24 @@
+{
+  "name": "skyscraper-explainer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render SkyscraperExplainer out/skyscraper.mp4",
+    "render:preview": "remotion render SkyscraperExplainer out/preview.mp4 --concurrency=1",
+    "upgrade": "remotion upgrade"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.300",
+    "@remotion/player": "^4.0.300",
+    "@remotion/bundler": "^4.0.300",
+    "@remotion/renderer": "^4.0.300",
+    "remotion": "^4.0.300",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "typescript": "^5.4.5"
+  }
+}

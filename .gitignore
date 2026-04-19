@@ -8,3 +8,6 @@ tests/debug_runner
 rush01-tester/
 *.dSYM/
 viz/__pycache__/
+video/node_modules/
+video/build/
+video/out/frames/
