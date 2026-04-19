@@ -15,32 +15,49 @@ export const SceneOutro: React.FC = () => {
       }}
     >
       <Title
-        text="Line-level WFC"
+        text="Big picture"
         subtitle="the right abstraction beats raw power"
-        size={80}
+        size={72}
       />
-      <div style={{marginTop: 60, maxWidth: 920}}>
+      <div style={{marginTop: 70, maxWidth: 980}}>
         <FadeText
-          delay={20}
-          style={{fontSize: 26, lineHeight: 1.5, marginBottom: 20, color: COLORS.fg}}
+          delay={30}
+          style={{
+            fontSize: 26,
+            lineHeight: 1.55,
+            marginBottom: 24,
+            color: COLORS.fg,
+          }}
         >
-          Brute force: 9<sup>81</sup> states → 20 minutes.
-        </FadeText>
-        <FadeText
-          delay={50}
-          style={{fontSize: 26, lineHeight: 1.5, marginBottom: 20, color: COLORS.fg}}
-        >
-          Cell-level CSP: tight on uniqueness, loose on visibility.
+          Brute force: try everything, one cell at a time —{' '}
+          <span style={{color: COLORS.red}}>20 minutes</span>.
         </FadeText>
         <FadeText
           delay={80}
-          style={{fontSize: 30, lineHeight: 1.5, color: COLORS.green, fontWeight: 600}}
+          style={{
+            fontSize: 26,
+            lineHeight: 1.55,
+            marginBottom: 24,
+            color: COLORS.fg,
+          }}
         >
-          Line-level WFC: domains of whole permutations → 40ms.
+          Sudoku-style CSP: smart per-cell — but can't see{' '}
+          <em>whole rows</em>.
+        </FadeText>
+        <FadeText
+          delay={140}
+          style={{
+            fontSize: 30,
+            lineHeight: 1.55,
+            color: COLORS.green,
+            fontWeight: 600,
+          }}
+        >
+          List legal rows, cross-check at cells, prune — ≈ 40 milliseconds.
         </FadeText>
       </div>
       <FadeText
-        delay={120}
+        delay={200}
         style={{
           fontSize: 18,
           color: COLORS.fgDim,
@@ -48,7 +65,7 @@ export const SceneOutro: React.FC = () => {
           fontFamily: 'JetBrains Mono, monospace',
         }}
       >
-        rush-01  ·  42 Piscine · C with only write / malloc / free
+        rush-01  ·  42 Piscine  ·  line-level wave-function collapse
       </FadeText>
     </AbsoluteFill>
   );

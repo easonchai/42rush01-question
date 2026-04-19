@@ -6,15 +6,15 @@ import {FadeText} from '../components/FadeText';
 type Module = {name: string; role: string; color: string};
 
 const MODULES: Module[] = [
-  {name: 'parse.c', role: 'tokenize + validate argv', color: HEIGHT_COLORS[0]},
-  {name: 'precheck.c', role: 'reject impossible clue pairs', color: HEIGHT_COLORS[1]},
-  {name: 'permgen.c', role: 'bucket all N! perms by (lv, rv)', color: HEIGHT_COLORS[2]},
-  {name: 'state.c', role: 'wire lines → buckets, init cell domains', color: HEIGHT_COLORS[3]},
-  {name: 'propagate.c', role: 'fixed-point loop + cell intersection', color: HEIGHT_COLORS[4]},
-  {name: 'propagate_posval.c', role: 'recompute pos_val from alive perms', color: HEIGHT_COLORS[5]},
-  {name: 'propagate_kill.c', role: 'kill perms whose value is now forbidden', color: HEIGHT_COLORS[6]},
-  {name: 'search.c', role: 'MRV backtracking if propagation stalls', color: HEIGHT_COLORS[7]},
-  {name: 'output.c', role: 'format grid, single write()', color: HEIGHT_COLORS[8]},
+  {name: 'parse.c', role: 'read the clue string', color: HEIGHT_COLORS[0]},
+  {name: 'precheck.c', role: 'catch obviously impossible clues', color: HEIGHT_COLORS[1]},
+  {name: 'permgen.c', role: 'list every legal row', color: HEIGHT_COLORS[2]},
+  {name: 'state.c', role: 'set up the grid and candidate lists', color: HEIGHT_COLORS[3]},
+  {name: 'propagate.c', role: 'cross-check rows vs columns', color: HEIGHT_COLORS[4]},
+  {name: 'propagate_posval.c', role: '"what values can row r still place at column c?"', color: HEIGHT_COLORS[5]},
+  {name: 'propagate_kill.c', role: 'eliminate candidates that no longer fit', color: HEIGHT_COLORS[6]},
+  {name: 'search.c', role: 'guess only if propagation stalls', color: HEIGHT_COLORS[7]},
+  {name: 'output.c', role: 'print the solved grid', color: HEIGHT_COLORS[8]},
 ];
 
 export const SceneCode: React.FC = () => {
@@ -27,13 +27,13 @@ export const SceneCode: React.FC = () => {
           fontSize: 40,
           fontWeight: 600,
           textAlign: 'center',
-          marginBottom: 12,
+          marginBottom: 10,
         }}
       >
-        The code, piece by piece
+        What the code actually does
       </FadeText>
       <FadeText
-        delay={15}
+        delay={20}
         style={{
           fontSize: 20,
           textAlign: 'center',
@@ -41,24 +41,23 @@ export const SceneCode: React.FC = () => {
           color: COLORS.fgDim,
         }}
       >
-        20 files, ~500 LOC of C · only{' '}
-        <code style={{color: COLORS.accent}}>write</code>,{' '}
+        pure C · only <code style={{color: COLORS.accent}}>write</code>,{' '}
         <code style={{color: COLORS.accent}}>malloc</code>,{' '}
-        <code style={{color: COLORS.accent}}>free</code> · norminette-clean
+        <code style={{color: COLORS.accent}}>free</code> · passes norminette
       </FadeText>
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: 12,
+          gap: 14,
           columnGap: 40,
           flex: 1,
           alignContent: 'start',
         }}
       >
         {MODULES.map((m, i) => {
-          const delay = 30 + i * 12;
-          const op = interpolate(frame, [delay, delay + 12], [0, 1], {
+          const delay = 45 + i * 22;
+          const op = interpolate(frame, [delay, delay + 16], [0, 1], {
             extrapolateLeft: 'clamp',
             extrapolateRight: 'clamp',
           });
@@ -71,7 +70,7 @@ export const SceneCode: React.FC = () => {
                 gap: 16,
                 opacity: op,
                 transform: `translateX(${(1 - op) * 30}px)`,
-                padding: '10px 16px',
+                padding: '12px 18px',
                 background: COLORS.bgPanel,
                 borderRadius: 8,
                 borderLeft: `4px solid ${m.color}`,
@@ -83,7 +82,7 @@ export const SceneCode: React.FC = () => {
                   fontSize: 20,
                   fontWeight: 600,
                   color: m.color,
-                  width: 200,
+                  width: 230,
                 }}
               >
                 {m.name}

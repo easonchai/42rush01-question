@@ -18,7 +18,7 @@ export const SceneProblem: React.FC = () => {
           marginBottom: 20,
         }}
       >
-        The rules
+        The rules — think Sudoku, but you can only see it from the side
       </FadeText>
       <div
         style={{
@@ -41,51 +41,40 @@ export const SceneProblem: React.FC = () => {
         </div>
         <div style={{paddingLeft: 20, paddingRight: 40}}>
           <FadeText
-            delay={30}
-            style={{
-              fontSize: 26,
-              lineHeight: 1.5,
-              marginBottom: 18,
-            }}
+            delay={40}
+            style={{fontSize: 26, lineHeight: 1.5, marginBottom: 22}}
           >
-            • Place heights{' '}
-            <span style={{color: COLORS.accent, fontWeight: 600}}>1..N</span> on
-            an <span style={{color: COLORS.accent}}>N×N</span> grid
+            Put towers of heights{' '}
+            <span style={{color: COLORS.accent, fontWeight: 600}}>1..N</span> in
+            an <span style={{color: COLORS.accent}}>N×N</span> grid.
           </FadeText>
           <FadeText
-            delay={60}
-            style={{
-              fontSize: 26,
-              lineHeight: 1.5,
-              marginBottom: 18,
-            }}
+            delay={100}
+            style={{fontSize: 26, lineHeight: 1.5, marginBottom: 22}}
           >
-            • Each row and column is a{' '}
-            <span style={{color: COLORS.accent}}>Latin square</span>
+            Each row and each column uses every height{' '}
+            <em>exactly once</em>.
           </FadeText>
           <FadeText
-            delay={95}
-            style={{
-              fontSize: 26,
-              lineHeight: 1.5,
-              marginBottom: 18,
-            }}
+            delay={180}
+            style={{fontSize: 26, lineHeight: 1.5, marginBottom: 10}}
           >
-            • <span style={{color: COLORS.gold}}>Clues</span> around the edge ={' '}
-            how many towers you can see from that side
+            The <span style={{color: COLORS.gold}}>yellow numbers</span> are
+            clues: stand on that side and count how many towers you can see.
           </FadeText>
           <FadeText
-            delay={140}
+            delay={260}
             style={{
-              fontSize: 24,
+              fontSize: 22,
               lineHeight: 1.5,
               color: COLORS.fgDim,
+              fontStyle: 'italic',
             }}
           >
-            (a taller tower hides any shorter ones behind it)
+            Taller towers hide shorter ones behind them.
           </FadeText>
           <FadeText
-            delay={190}
+            delay={330}
             style={{
               fontSize: 26,
               lineHeight: 1.5,
@@ -94,7 +83,7 @@ export const SceneProblem: React.FC = () => {
               fontWeight: 600,
             }}
           >
-            Goal: solve 9×9 — fast.
+            Goal: fill the grid so every clue matches — and do it for 9×9 fast.
           </FadeText>
         </div>
       </div>

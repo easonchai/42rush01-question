@@ -525,23 +525,30 @@ def render_scene(state, az, el, scale, w, rows, highlight_cell=None):
         h_avg, pc = tower_height_for_cell(cell, n)
         if pc == 0:
             # contradiction marker: red X base
-            base = (200, 40, 40)
-            draw_box(pix, cx_w, cy_w, r, c, 0, r + 1, c + 1, 0.15,
+            base = (220, 50, 50)
+            draw_box(pix, cx_w, cy_w, r, c, 0, r + 1, c + 1, 0.2,
                      az, el, scale, ox, oy, base, depth)
             continue
         if pc == 1:
+            # Determined cell: solid, full-height tower in its height color
             base = height_base_color(int(h_avg), n)
+            if highlight_cell == (r, c):
+                base = (255, 255, 255)
+            draw_box(pix, cx_w, cy_w, r, c, 0, r + 1, c + 1, h_avg,
+                     az, el, scale, ox, oy, base, depth)
         else:
-            # desaturated "ghost" color for uncertain cells
-            base = shade(height_base_color(int(round(h_avg)), n), 0.55)
-            base = (base[0] // 2 + 40, base[1] // 2 + 40, base[2] // 2 + 50)
-
-        if highlight_cell == (r, c):
-            base = (255, 255, 255)       # flash white this frame
-
-        height = max(0.15, h_avg)
-        draw_box(pix, cx_w, cy_w, r, c, 0, r + 1, c + 1, height,
-                 az, el, scale, ox, oy, base, depth)
+            # Undetermined cell: short stump sized to the smallest possible
+            # height in the domain, so the ground is visible between stumps
+            # and stumps of different remaining-domain sizes differ in size.
+            # The stump height grows toward N as the domain shrinks.
+            min_h = bit_to_value(cell & -cell)  # lowest alive value
+            stump = 0.3 + (n - pc) / max(1, n - 1) * 0.6  # 0.3..~0.9
+            base = (90, 110, 150)
+            if highlight_cell == (r, c):
+                base = (255, 255, 255)
+            draw_box(pix, cx_w, cy_w, r, c, 0, r + 1, c + 1, stump,
+                     az, el, scale, ox, oy, base, depth)
+            _ = min_h  # reserved for possible future heuristic
 
     return pix
 
@@ -588,42 +595,62 @@ def hud_lines(state, az, el, scale, auto_play, steps_total):
 # Interactive curses UI
 # ---------------------------------------------------------------------------
 
+_ARROW = {b"A": "up", b"B": "down", b"C": "right", b"D": "left"}
+
+
 def _read_key(timeout=0.0):
-    """Read one keystroke (or a recognized escape sequence) from stdin.
-    Returns one of: None, "left", "right", "up", "down", "enter",
-    "space", "esc", a single character, or "ctrl-c"."""
+    """Read one keystroke from stdin. Uses os.read on the raw fd so an
+    entire ANSI escape sequence (e.g. b'\\x1b[C' for Right) arrives in a
+    single call, avoiding Python text-mode stdin buffering that would
+    otherwise split the bytes across calls and cause arrow keys to look
+    like bare ESC."""
     import select
     import sys
-    r, _, _ = select.select([sys.stdin], [], [], timeout)
+    import os
+    fd = sys.stdin.fileno()
+    r, _, _ = select.select([fd], [], [], timeout)
     if not r:
         return None
-    ch = sys.stdin.read(1)
-    if ch == "":
+    try:
+        data = os.read(fd, 32)
+    except OSError:
         return None
-    if ch == "\x03":
+    if not data:
+        return None
+    if data == b"\x03":
         return "ctrl-c"
-    if ch == "\x1b":
-        # Could be ESC alone, or an arrow-key sequence \x1b[<X>
-        r2, _, _ = select.select([sys.stdin], [], [], 0.01)
-        if not r2:
-            return "esc"
-        seq = sys.stdin.read(1)
-        if seq == "[":
-            r3, _, _ = select.select([sys.stdin], [], [], 0.01)
-            if r3:
-                code = sys.stdin.read(1)
-                return {
-                    "A": "up",
-                    "B": "down",
-                    "C": "right",
-                    "D": "left",
-                }.get(code, None)
-        return "esc"
-    if ch == "\r" or ch == "\n":
+    if data == b"\r" or data == b"\n":
         return "enter"
-    if ch == " ":
+    if data == b" ":
         return "space"
-    return ch
+    if data[0:1] == b"\x1b":
+        # If only the ESC byte arrived, wait briefly for the rest.
+        if len(data) == 1:
+            r2, _, _ = select.select([fd], [], [], 0.05)
+            if r2:
+                try:
+                    data += os.read(fd, 32)
+                except OSError:
+                    pass
+            if len(data) == 1:
+                return "esc"
+        # \x1b [ <params> <terminator>
+        if len(data) >= 3 and data[1:2] == b"[":
+            term = data[-1:]
+            mapped = _ARROW.get(term)
+            if mapped:
+                return mapped
+        return "esc"
+    if len(data) == 1:
+        try:
+            return data.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+    # Multiple bytes but not an escape sequence — return the first char.
+    try:
+        return data[0:1].decode("utf-8")
+    except UnicodeDecodeError:
+        return None
 
 
 def _terminal_size():
@@ -714,11 +741,20 @@ def run_interactive(state):
         frame_interval = 1.0 / 30.0
         last_frame = 0.0
 
+        # Advance past the opening "phase" event so the first frame shows
+        # some work; initial propagation finds all the "free" cells.
+        try:
+            next(gen)        # ("phase", "propagate")
+        except StopIteration:
+            finished = True
+
         while True:
             now = time.time()
 
             key = _read_key(timeout=0.01)
-            if key in ("q", "esc", "ctrl-c"):
+            # Only explicit 'q' or Ctrl-C quits. Bare ESC can race with
+            # arrow-key escape sequences on slow links, so we ignore it.
+            if key in ("q", "Q", "ctrl-c"):
                 break
             elif key == "left":
                 az -= math.radians(15)
