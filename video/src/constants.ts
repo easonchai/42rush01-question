@@ -7,12 +7,12 @@ export const HEIGHT = 720;
 export const SCENES = {
   intro: 6,
   problem: 13,
-  bruteforce: 13,
+  bruteforce: 15,
   csp: 16,
-  wfc: 20,
+  wfc: 22,
   code: 14,
-  perf: 12,
-  outro: 8,
+  perf: 16,
+  outro: 12,
 };
 
 export const SCENE_FRAMES = {

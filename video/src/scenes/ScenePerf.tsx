@@ -1,78 +1,84 @@
-import React from 'react';
-import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
-import {COLORS} from '../constants';
-import {FadeText} from '../components/FadeText';
+import React from "react";
+import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { COLORS } from "../constants";
+import { FadeText } from "../components/FadeText";
+import { AnimatedNumber } from "../components/AnimatedNumber";
+import { BackgroundGrid } from "../components/BackgroundGrid";
+import { SceneAudio } from "../components/SceneAudio";
 
-type Row = {n: number; norm: number; fast: number};
+type Row = { n: number; norm: number; fast: number };
 
 const ROWS: Row[] = [
-  {n: 6, norm: 12.2, fast: 15.3},
-  {n: 7, norm: 14.9, fast: 16.0},
-  {n: 8, norm: 37.0, fast: 19.5},
-  {n: 9, norm: 252.8, fast: 41.5},
+  { n: 6, norm: 12.2, fast: 15.3 },
+  { n: 7, norm: 14.9, fast: 16.0 },
+  { n: 8, norm: 37.0, fast: 19.5 },
+  { n: 9, norm: 252.8, fast: 41.5 },
 ];
 
-// Bar scale is capped to the N=9 norm time (the clear story anchor)
 const MAX_MS = 260;
 
 export const ScenePerf: React.FC = () => {
   const frame = useCurrentFrame();
   return (
-    <AbsoluteFill style={{padding: 50}}>
+    <AbsoluteFill style={{ padding: 50 }}>
+      <SceneAudio name="perf" />
+      <BackgroundGrid />
       <FadeText
         delay={0}
         style={{
           fontSize: 40,
-          fontWeight: 600,
-          textAlign: 'center',
-          marginBottom: 8,
+          fontWeight: 700,
+          textAlign: "center",
+          marginBottom: 6,
+          letterSpacing: -0.5,
         }}
       >
         How fast is it really?
       </FadeText>
       <FadeText
-        delay={20}
+        delay={18}
         style={{
-          fontSize: 20,
-          textAlign: 'center',
+          fontSize: 18,
+          textAlign: "center",
           color: COLORS.fgDim,
-          marginBottom: 34,
+          marginBottom: 28,
         }}
       >
-        median time to solve · 90 random puzzles per size · lower is better
+        median time · 90 random puzzles per size · lower is better
       </FadeText>
       <div
         style={{
           flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 26,
-          padding: '0 70px',
+          display: "flex",
+          flexDirection: "column",
+          gap: 22,
+          padding: "0 60px",
         }}
       >
         {ROWS.map((row, i) => {
-          const delay = 40 + i * 30;
-          const anim = interpolate(frame, [delay, delay + 45], [0, 1], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
+          const delay = 36 + i * 28;
+          const anim = interpolate(frame, [delay, delay + 55], [0, 1], {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
           });
-          const normW = (row.norm / MAX_MS) * 100 * anim;
-          const fastW = (row.fast / MAX_MS) * 100 * anim;
+          const eased = 1 - Math.pow(1 - anim, 3);
+          const normW = (row.norm / MAX_MS) * 100 * eased;
+          const fastW = (row.fast / MAX_MS) * 100 * eased;
           const ratio = row.norm / row.fast;
-          const showRatio = anim > 0.9 && ratio >= 1.4;
+          const showRatio = anim > 0.85 && ratio >= 1.4;
           return (
             <div
               key={row.n}
-              style={{display: 'flex', alignItems: 'center', gap: 20}}
+              style={{ display: "flex", alignItems: "center", gap: 18 }}
             >
               <div
                 style={{
                   width: 70,
-                  fontFamily: 'JetBrains Mono, monospace',
+                  fontFamily: "JetBrains Mono, monospace",
                   fontSize: 26,
                   color: COLORS.fg,
-                  textAlign: 'right',
-                  fontWeight: 600,
+                  textAlign: "right",
+                  fontWeight: 700,
                 }}
               >
                 N={row.n}
@@ -80,64 +86,76 @@ export const ScenePerf: React.FC = () => {
               <div
                 style={{
                   flex: 1,
-                  display: 'flex',
-                  flexDirection: 'column',
+                  display: "flex",
+                  flexDirection: "column",
                   gap: 6,
                 }}
               >
-                <div
-                  style={{display: 'flex', alignItems: 'center', gap: 10}}
-                >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div
                     style={{
                       width: `${normW}%`,
                       minWidth: normW > 0 ? 4 : 0,
                       height: 24,
-                      background: COLORS.accentWarm,
+                      background: `linear-gradient(90deg, ${COLORS.accentWarm}, ${COLORS.red})`,
                       borderRadius: 4,
+                      boxShadow: `0 0 12px ${COLORS.accentWarm}55`,
                     }}
                   />
                   <span
                     style={{
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: 16,
+                      fontFamily: "JetBrains Mono, monospace",
+                      fontSize: 15,
                       color: COLORS.accentWarm,
                       opacity: anim,
                     }}
                   >
-                    {row.norm.toFixed(1)}ms  ·  norm (42 build)
+                    <AnimatedNumber
+                      from={0}
+                      to={row.norm}
+                      delay={delay}
+                      duration={55}
+                      format={(v) => v.toFixed(1) + "ms"}
+                    />{" "}
+                    · norm
                   </span>
                 </div>
-                <div
-                  style={{display: 'flex', alignItems: 'center', gap: 10}}
-                >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <div
                     style={{
                       width: `${fastW}%`,
                       minWidth: fastW > 0 ? 4 : 0,
                       height: 24,
-                      background: COLORS.green,
+                      background: `linear-gradient(90deg, ${COLORS.green}, #4ade80)`,
                       borderRadius: 4,
+                      boxShadow: `0 0 12px ${COLORS.green}55`,
                     }}
                   />
                   <span
                     style={{
-                      fontFamily: 'JetBrains Mono, monospace',
-                      fontSize: 16,
+                      fontFamily: "JetBrains Mono, monospace",
+                      fontSize: 15,
                       color: COLORS.green,
                       opacity: anim,
                     }}
                   >
-                    {row.fast.toFixed(1)}ms  ·  fast (-O3 + threads)
+                    <AnimatedNumber
+                      from={0}
+                      to={row.fast}
+                      delay={delay}
+                      duration={55}
+                      format={(v) => v.toFixed(1) + "ms"}
+                    />{" "}
+                    · fast
                   </span>
                   {showRatio && (
                     <span
                       style={{
-                        fontSize: 18,
+                        fontSize: 17,
                         color: COLORS.gold,
                         fontWeight: 700,
-                        marginLeft: 14,
-                        fontFamily: 'Inter, sans-serif',
+                        marginLeft: 12,
+                        fontFamily: "Inter, sans-serif",
                       }}
                     >
                       {ratio.toFixed(1)}× faster
@@ -150,16 +168,29 @@ export const ScenePerf: React.FC = () => {
         })}
       </div>
       <FadeText
-        delay={260}
+        delay={230}
         style={{
-          textAlign: 'center',
-          fontSize: 26,
-          marginTop: 24,
+          textAlign: "center",
+          fontSize: 24,
+          marginTop: 20,
           color: COLORS.gold,
-          fontWeight: 600,
+          fontWeight: 700,
         }}
       >
-        At N=9: brute force ≈ 20 min → our norm ≈ 250 ms → fast ≈ 40 ms
+        At N=9: brute force ≈ 20 min → norm ≈ 250 ms → fast ≈ 40 ms
+      </FadeText>
+      <FadeText
+        delay={280}
+        style={{
+          textAlign: "center",
+          fontSize: 18,
+          marginTop: 8,
+          color: COLORS.fgDim,
+          fontFamily: "JetBrains Mono, monospace",
+          letterSpacing: 2,
+        }}
+      >
+        ≈30,000× SPEEDUP
       </FadeText>
     </AbsoluteFill>
   );
