@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" width="820" height="600" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace" font-size="13" role="img" aria-label="Rush-01 benchmark animation">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#11161d"/>
+      <stop offset="100%" stop-color="#0a0e13"/>
+    </linearGradient>
+    <linearGradient id="speedup" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ef476f"/>
+      <stop offset="100%" stop-color="#118ab2"/>
+    </linearGradient>
+    <style><![CDATA[
+      .l    { fill: #c9d1d9; opacity: 0; }
+      .dim  { fill: #8b949e; opacity: 0; }
+      .p    { fill: #6cc644; opacity: 0; }
+      .head { fill: #58a6ff; opacity: 0; }
+      .ok   { fill: #6cc644; opacity: 0; }
+      .slow { fill: #f78166; opacity: 0; }
+      .fast { fill: #7ee787; opacity: 0; }
+      .hi   { fill: #ffffff; opacity: 0; }
+    ]]></style>
+  </defs>
+
+  <!-- Terminal window chrome -->
+  <rect x="0" y="0" width="820" height="600" rx="10" ry="10" fill="url(#bg)"/>
+  <rect x="0" y="0" width="820" height="32" rx="10" ry="10" fill="#1c2128"/>
+  <rect x="0" y="22" width="820" height="10" fill="#1c2128"/>
+  <circle cx="18" cy="16" r="6" fill="#ef476f"/>
+  <circle cx="38" cy="16" r="6" fill="#ffd166"/>
+  <circle cx="58" cy="16" r="6" fill="#06d6a0"/>
+  <text x="410" y="20" text-anchor="middle" fill="#8b949e" font-size="12">rush-01 — benchmark</text>
+
+  <!-- Lines (y starts at 64, line-height 22) -->
+  <g transform="translate(20, 64)">
+
+    <text class="p"    y="0">$ <tspan class="l">make bench</tspan>
+      <animate attributeName="opacity" from="0" to="1" begin="0.0s" dur="0.25s" fill="freeze"/>
+    </text>
+
+    <text class="head" y="32">=== Benchmarking ex00 (norminette-compliant) ===
+      <animate attributeName="opacity" from="0" to="1" begin="0.4s" dur="0.25s" fill="freeze"/>
+    </text>
+    <text class="dim"  y="54">Using solver: ./ex00/rush-01
+      <animate attributeName="opacity" from="0" to="1" begin="0.6s" dur="0.25s" fill="freeze"/>
+    </text>
+    <text class="dim"  y="76">runs=3  puzzles_per_N=30
+      <animate attributeName="opacity" from="0" to="1" begin="0.75s" dur="0.25s" fill="freeze"/>
+    </text>
+
+    <text class="l" y="102">N=3  n= 90  med=   <tspan class="fast">5.58</tspan>ms   max=  10.09ms
+      <animate attributeName="opacity" from="0" to="1" begin="0.9s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="122">N=4  n= 90  med=   <tspan class="fast">5.93</tspan>ms   max=  13.75ms
+      <animate attributeName="opacity" from="0" to="1" begin="1.05s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="142">N=5  n= 90  med=   <tspan class="fast">5.88</tspan>ms   max=  13.43ms
+      <animate attributeName="opacity" from="0" to="1" begin="1.2s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="162">N=6  n= 90  med=   <tspan class="fast">6.25</tspan>ms   max=  18.39ms
+      <animate attributeName="opacity" from="0" to="1" begin="1.35s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="182">N=7  n= 90  med=   <tspan class="fast">7.99</tspan>ms   max=  12.58ms
+      <animate attributeName="opacity" from="0" to="1" begin="1.5s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="202">N=8  n= 90  med=  <tspan class="slow">22.03</tspan>ms   max=  54.62ms
+      <animate attributeName="opacity" from="0" to="1" begin="1.7s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="222">N=9  n= 90  med= <tspan class="slow">162.19</tspan>ms   max=1403.92ms
+      <animate attributeName="opacity" from="0" to="1" begin="1.95s" dur="0.25s" fill="freeze"/>
+    </text>
+    <text class="ok" y="248">TOTAL passed=630  failed=0
+      <animate attributeName="opacity" from="0" to="1" begin="2.3s" dur="0.25s" fill="freeze"/>
+    </text>
+
+    <text class="head" y="284">=== Benchmarking bonus (-O3 + pthread parallel gen) ===
+      <animate attributeName="opacity" from="0" to="1" begin="2.7s" dur="0.25s" fill="freeze"/>
+    </text>
+    <text class="dim"  y="306">Using solver: ./bonus/rush-01
+      <animate attributeName="opacity" from="0" to="1" begin="2.9s" dur="0.25s" fill="freeze"/>
+    </text>
+
+    <text class="l" y="332">N=3  n= 90  med=   <tspan class="fast">5.88</tspan>ms   max=  13.89ms
+      <animate attributeName="opacity" from="0" to="1" begin="3.1s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="352">N=4  n= 90  med=   <tspan class="fast">5.87</tspan>ms   max=   9.01ms
+      <animate attributeName="opacity" from="0" to="1" begin="3.25s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="372">N=5  n= 90  med=   <tspan class="fast">5.93</tspan>ms   max=   8.60ms
+      <animate attributeName="opacity" from="0" to="1" begin="3.4s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="392">N=6  n= 90  med=   <tspan class="fast">5.91</tspan>ms   max=  10.23ms
+      <animate attributeName="opacity" from="0" to="1" begin="3.55s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="412">N=7  n= 90  med=   <tspan class="fast">6.11</tspan>ms   max=  13.80ms
+      <animate attributeName="opacity" from="0" to="1" begin="3.7s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="432">N=8  n= 90  med=   <tspan class="fast">8.01</tspan>ms   max=  14.91ms
+      <animate attributeName="opacity" from="0" to="1" begin="3.85s" dur="0.2s" fill="freeze"/>
+    </text>
+    <text class="l" y="452">N=9  n= 90  med=  <tspan class="fast">22.74</tspan>ms   max= 254.02ms
+      <animate attributeName="opacity" from="0" to="1" begin="4.05s" dur="0.25s" fill="freeze"/>
+    </text>
+    <text class="ok" y="478">TOTAL passed=630  failed=0
+      <animate attributeName="opacity" from="0" to="1" begin="4.4s" dur="0.25s" fill="freeze"/>
+    </text>
+  </g>
+
+  <!-- Speedup banner -->
+  <g opacity="0">
+    <animate attributeName="opacity" from="0" to="1" begin="4.9s" dur="0.5s" fill="freeze"/>
+    <rect x="20" y="552" width="780" height="38" rx="8" fill="url(#speedup)" opacity="0.92"/>
+    <text x="410" y="577" text-anchor="middle" fill="#ffffff" font-size="16" font-weight="700">
+      bonus is 7.1× faster on N=9  •  2.75× faster on N=8  •  same correctness (630/630)
+    </text>
+  </g>
+
+  <!-- Blinking cursor at end -->
+  <rect x="20" y="558" width="9" height="14" fill="#c9d1d9" opacity="0">
+    <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes="0;0.83;0.83;0.95;0.95;1" dur="6s" begin="0s" fill="freeze"/>
+  </rect>
+</svg>

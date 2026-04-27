@@ -2,12 +2,18 @@
 
 Solver for the 42 Rush-01 Skyscraper (Towers) puzzle, supporting N = 3..9.
 
+<p align="center">
+  <img src="assets/benchmark.svg" alt="rush-01 benchmark animation: bonus is 7.1× faster on N=9" width="820"/>
+</p>
+
+> Median solve time across 90 random puzzles per N (3 runs × 30 puzzles), Apple Silicon, single core for `ex00`. The `bonus` build hits **22.7 ms** on N=9 vs **162 ms** for the norminette-compliant `ex00` — same algorithm, same 630/630 correctness, just `-O3 -march=native` plus `pthread`-parallelised bucket generation and `__builtin_popcount` / `__builtin_ctzll` intrinsics.
+
 ## What's in this repo
 
 | Piece | Directory | What it is |
 |---|---|---|
 | Norminette-clean solver | `ex00/` | The 42 submission. C, `write`/`malloc`/`free` only, `-Wall -Wextra -Werror`, 20 files, norminette passes. |
-| Fast solver | `bonus/` | Same algorithm, compiled with `-O3 -march=native -pthread`, compiler intrinsics, parallel bucket generation. 6× faster on N=9. |
+| Fast solver | `bonus/` | Same algorithm, compiled with `-O3 -march=native -pthread`, compiler intrinsics, parallel bucket generation. ~7× faster on N=9. |
 | Test harness | `tests/` | `gen_puzzle.c` (random Latin squares → clues), `verify.c` (Latin-square + clue check), `run_tests.sh`, `bench.sh`. |
 | Live 3D visualizer | `viz/` | Python 3 CLI visualizer of the algorithm running, with rotatable isometric view. Pure stdout ANSI (works on Warp, iTerm2, Alacritty, kitty, any truecolor terminal). |
 | Animated video | `video/` | Remotion (React + TS) explainer, 73 s @ 1280×720, output in `video/out/skyscraper.mp4`. |
