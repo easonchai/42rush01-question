@@ -9,9 +9,9 @@
     "upgrade": "remotion upgrade"
   },
   "dependencies": {
-    "@remotion/cli": "^4.0.300",
+    "@remotion/cli": "^4.0.546",
     "@remotion/player": "^4.0.300",
-    "@remotion/bundler": "^4.0.300",
+    "@remotion/bundler": "^4.0.546",
     "@remotion/renderer": "^4.0.300",
     "remotion": "^4.0.300",
     "react": "^18.3.1",
